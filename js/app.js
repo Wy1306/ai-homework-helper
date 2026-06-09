@@ -1,4 +1,52 @@
+// ============================================================
+// API Key 管理（存 localStorage，不经过服务器）
+// ============================================================
+const LS_KEY = 'ai_helper_ds_key';
+
+function getApiKey() {
+  return localStorage.getItem(LS_KEY) || '';
+}
+
+function saveApiKey() {
+  const input = document.getElementById('apiKeyInput');
+  const key = input.value.trim();
+  if (!key) {
+    updateKeyStatus('error', '请输入 Key');
+    return;
+  }
+  if (!key.startsWith('sk-')) {
+    updateKeyStatus('error', '格式不对，Key 应以 sk- 开头');
+    return;
+  }
+  localStorage.setItem(LS_KEY, key);
+  updateKeyStatus('ok', '已保存 ✓');
+  input.value = '';
+  // 3秒后隐藏状态
+  setTimeout(() => updateKeyStatus('idle', getApiKey() ? '已设置' : '未设置'), 3000);
+}
+
+function toggleKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function updateKeyStatus(type, msg) {
+  const el = document.getElementById('apiKeyStatus');
+  el.textContent = msg;
+  el.className = 'api-key-status ' + type;
+}
+
+// 页面加载时检查是否已有 Key
+(function initKeyBar() {
+  const saved = getApiKey();
+  if (saved) {
+    updateKeyStatus('idle', '已设置');
+  }
+})();
+
+// ============================================================
 // Tab 切换
+// ============================================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -203,11 +251,28 @@ async function analyze(mode) {
   resultBox.className = 'result-box loading';
   resultBox.textContent = '正在调用 AI 分析，请稍候...';
 
+  // 检查 API Key
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    resultBox.className = 'result-box visible';
+    resultBox.innerHTML = `
+      <p style="color: var(--warning)">⚠️ 请先设置 DeepSeek API Key</p>
+      <p style="color: var(--text-dim); font-size: 13px;">
+        去 <a href="https://platform.deepseek.com/" target="_blank" style="color: var(--primary)">platform.deepseek.com</a> 注册，免费额度够用几千次。
+      </p>`;
+    btn.disabled = false;
+    btn.textContent = getBtnLabel(mode);
+    return;
+  }
+
   try {
     const prompt = PROMPTS[mode](code || question, lang);
     const response = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': apiKey
+      },
       body: JSON.stringify({ prompt, mode })
     });
 

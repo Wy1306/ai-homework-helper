@@ -61,6 +61,91 @@ main {
   padding: 24px 20px 60px;
 }
 
+/* API Key 栏 */
+.api-key-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.api-key-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.api-key-label {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.api-key-bar input {
+  flex: 1;
+  min-width: 240px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Consolas', 'JetBrains Mono', monospace;
+}
+
+.api-key-bar input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-small {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--primary);
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-small:hover { background: var(--primary-hover); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 10px;
+}
+
+.btn-ghost:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.api-key-status {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.api-key-status.idle { color: var(--text-dim); }
+.api-key-status.ok { color: var(--success); }
+.api-key-status.error { color: var(--danger); }
+
+.api-key-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  opacity: 0.8;
+}
+
+.api-key-hint a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
 .tabs {
   display: flex;
   gap: 6px;

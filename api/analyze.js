@@ -1,19 +1,19 @@
-// Vercel Serverless Function — 代理 DeepSeek API 请求，保护 API Key 不暴露到前端
+// Vercel Serverless Function — DeepSeek API 代理
+// 不做任何业务处理，只是帮你转发请求到 DeepSeek，保护 Key 不走浏览器直接暴露给第三方
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { prompt, mode } = req.body;
+  const { prompt } = req.body;
+  const apiKey = req.headers['x-api-key'];
 
   if (!prompt) {
     return res.status(400).json({ error: '缺少 prompt 参数' });
   }
-
-  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: '服务端未配置 API Key' });
+    return res.status(400).json({ error: '缺少 API Key，请在页面顶部设置' });
   }
 
   try {
