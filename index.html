@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 作业助手 - 大学生编程学习工具</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🦉</span>
+      <h1>AI 作业助手</h1>
+    </div>
+    <p class="subtitle">帮你理解代码，而不是替你写作业</p>
+  </header>
+
+  <main>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="debug">🐛 Bug 诊断</button>
+      <button class="tab-btn" data-tab="review">🔍 代码审查</button>
+      <button class="tab-btn" data-tab="explain">💡 思路讲解</button>
+      <button class="tab-btn" data-tab="comment">📝 注释补全</button>
+    </nav>
+
+    <section class="tab-content active" id="tab-debug">
+      <div class="input-group">
+        <label>
+          粘贴你的代码（包含报错信息）
+          <textarea id="debug-code" placeholder="把代码和报错信息一起粘贴到这里&#10;&#10;例如：&#10;Traceback (most recent call last):&#10;  File &quot;test.py&quot;, line 3, in &lt;module&gt;&#10;    print(1/0)&#10;ZeroDivisionError: division by zero" rows="12"></textarea>
+        </label>
+      </div>
+      <div class="lang-select">
+        <label>编程语言：
+          <select id="debug-lang">
+            <option value="auto">自动检测</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="sql">SQL</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn-primary" id="btn-debug" onclick="analyze('debug')">🔍 分析 Bug</button>
+      <div class="result-box" id="result-debug"></div>
+    </section>
+
+    <section class="tab-content" id="tab-review">
+      <div class="input-group">
+        <label>
+          粘贴你要审查的代码
+          <textarea id="review-code" placeholder="粘贴完整代码文件内容" rows="12"></textarea>
+        </label>
+      </div>
+      <div class="lang-select">
+        <label>编程语言：
+          <select id="review-lang">
+            <option value="auto">自动检测</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="sql">SQL</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn-primary" id="btn-review" onclick="analyze('review')">🔍 审查代码</button>
+      <div class="result-box" id="result-review"></div>
+    </section>
+
+    <section class="tab-content" id="tab-explain">
+      <div class="input-group">
+        <label>
+          粘贴题目描述
+          <textarea id="explain-question" placeholder="粘贴题目完整内容&#10;&#10;例如：&#10;给定一个整数数组 nums 和一个整数目标值 target，请你在该数组中找出和为目标值 target 的那两个整数，并返回它们的数组下标。" rows="8"></textarea>
+        </label>
+      </div>
+      <button class="btn-primary" id="btn-explain" onclick="analyze('explain')">💡 讲解思路</button>
+      <div class="result-box" id="result-explain"></div>
+    </section>
+
+    <section class="tab-content" id="tab-comment">
+      <div class="input-group">
+        <label>
+          粘贴需要注释的代码
+          <textarea id="comment-code" placeholder="粘贴没有注释的代码" rows="12"></textarea>
+        </label>
+      </div>
+      <div class="lang-select">
+        <label>编程语言：
+          <select id="comment-lang">
+            <option value="auto">自动检测</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="sql">SQL</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn-primary" id="btn-comment" onclick="analyze('comment')">📝 补全注释</button>
+      <div class="result-box" id="result-comment"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built with ❤️ for B站 AI创造公开赛 | <a href="https://github.com/Wy1306/ai-homework-helper" target="_blank">GitHub</a></p>
+    <p class="disclaimer">⚠️ 本工具旨在帮你理解代码逻辑，请不要直接复制答案提交作业</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
