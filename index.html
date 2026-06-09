@@ -32,6 +32,8 @@
       <button class="tab-btn" data-tab="review">🔍 代码审查</button>
       <button class="tab-btn" data-tab="explain">💡 思路讲解</button>
       <button class="tab-btn" data-tab="comment">📝 注释补全</button>
+      <button class="tab-btn" data-tab="generate">✍️ 代码生成</button>
+      <button class="tab-btn" data-tab="editor">💻 离线编辑器</button>
     </nav>
 
     <section class="tab-content active" id="tab-debug">
@@ -93,17 +95,16 @@
       <div class="result-box" id="result-explain"></div>
     </section>
 
-    <section class="tab-content" id="tab-comment">
+    <section class="tab-content" id="tab-generate">
       <div class="input-group">
         <label>
-          粘贴需要注释的代码
-          <textarea id="comment-code" placeholder="粘贴没有注释的代码" rows="12"></textarea>
+          粘贴题目描述，AI 帮你写代码
+          <textarea id="generate-question" placeholder="把题目完整粘贴到这里&#10;&#10;例如：&#10;编写一个Python函数，接收一个字符串，判断它是否为回文。忽略大小写和非字母数字字符。&#10;&#10;你也可以指定语言、要求、限制条件等。" rows="8"></textarea>
         </label>
       </div>
       <div class="lang-select">
-        <label>编程语言：
-          <select id="comment-lang">
-            <option value="auto">自动检测</option>
+        <label>目标语言：
+          <select id="generate-lang">
             <option value="python">Python</option>
             <option value="java">Java</option>
             <option value="javascript">JavaScript</option>
@@ -113,8 +114,37 @@
           </select>
         </label>
       </div>
-      <button class="btn-primary" id="btn-comment" onclick="analyze('comment')">📝 补全注释</button>
-      <div class="result-box" id="result-comment"></div>
+      <button class="btn-primary" id="btn-generate" onclick="analyze('generate')">✍️ 生成代码</button>
+      <div class="result-box" id="result-generate"></div>
+    </section>
+
+    <section class="tab-content" id="tab-editor">
+      <div class="editor-toolbar">
+        <select id="editor-lang" onchange="onEditorLangChange()">
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="javascript">JavaScript</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="sql">SQL</option>
+          <option value="text">纯文本</option>
+        </select>
+        <button class="btn-small" onclick="runCode()" title="仅支持 JavaScript">▶ 运行</button>
+        <button class="btn-small btn-ghost" onclick="downloadCode()">⬇ 下载</button>
+        <button class="btn-small btn-ghost" onclick="clearEditor()">🗑 清空</button>
+        <span class="editor-status" id="editorStatus">已自动保存</span>
+      </div>
+      <div class="editor-body">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea id="codeEditor" placeholder="在这里写代码...&#10;&#10;• 断网也能写，内容自动保存到浏览器&#10;• Tab 键缩进，Shift+Tab 取消缩进&#10;• 选 JavaScript 可以点「运行」直接执行&#10;• 点「下载」保存为文件" spellcheck="false"></textarea>
+      </div>
+      <div class="editor-output" id="editorOutput" style="display:none">
+        <div class="output-header">
+          <span>▶ 运行输出</span>
+          <button class="btn-small btn-ghost" onclick="closeOutput()">✕</button>
+        </div>
+        <pre id="outputContent"></pre>
+      </div>
     </section>
   </main>
 

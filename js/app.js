@@ -144,6 +144,31 @@ ${question}
 
 教学原则：引导学生自己写出代码，而不是直接给答案。伪代码比真实代码更抽象一层。`,
 
+  generate: (question, lang) => `你是一个专业的编程老师。学生要你根据题目写出完整可运行的代码。
+
+题目：
+${question}
+
+目标语言：${lang}
+
+请按以下结构输出：
+
+## 📖 题目分析
+（用2-3句话概括题目核心要求）
+
+## 💻 完整代码
+（用三个反引号包裹，写出完整可运行的代码。注意边界条件处理、输入输出格式、必要的注释）
+
+## 🧠 关键逻辑讲解
+（挑代码中最重要的2-3处，解释为什么这样写）
+
+## ⚠️ 注意事项
+- 边界条件
+- 常见坑点
+- 输入输出格式说明
+
+注意：用中文讲解，代码中的变量名和注释用英文。`,
+
   comment: (code, lang) => `你是一个代码注释专家。请为以下${lang === 'auto' ? '' : lang}代码添加中文注释。只注释关键行，不要每行都注释。
 
 代码：
@@ -244,6 +269,11 @@ async function analyze(mode) {
       lang = document.getElementById('comment-lang').value;
       if (!code) { alert('请粘贴需要注释的代码'); return; }
       break;
+    case 'generate':
+      question = document.getElementById('generate-question').value.trim();
+      lang = document.getElementById('generate-lang').value;
+      if (!question) { alert('请粘贴题目描述'); return; }
+      break;
   }
 
   btn.disabled = true;
@@ -297,6 +327,164 @@ async function analyze(mode) {
 }
 
 function getBtnLabel(mode) {
-  const labels = { debug: '🔍 分析 Bug', review: '🔍 审查代码', explain: '💡 讲解思路', comment: '📝 补全注释' };
+  const labels = { debug: '🔍 分析 Bug', review: '🔍 审查代码', explain: '💡 讲解思路', comment: '📝 补全注释', generate: '✍️ 生成代码' };
   return labels[mode];
+}
+
+// ============================================================
+// 离线代码编辑器
+// ============================================================
+const editor = document.getElementById('codeEditor');
+const lineNumbers = document.getElementById('lineNumbers');
+const editorStatus = document.getElementById('editorStatus');
+const LS_EDITOR = 'ai_helper_editor_code';
+
+function updateLineNumbers() {
+  const lines = editor.value.split('\n');
+  const count = lines.length;
+  let html = '';
+  for (let i = 1; i <= count; i++) {
+    html += `<span>${i}</span>`;
+  }
+  lineNumbers.innerHTML = html;
+}
+
+// 同步行号滚动
+editor.addEventListener('scroll', () => {
+  lineNumbers.style.transform = `translateY(-${editor.scrollTop}px)`;
+});
+
+editor.addEventListener('input', () => {
+  updateLineNumbers();
+  autoSave();
+});
+
+// Tab 键插入缩进
+editor.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    if (e.shiftKey) {
+      // Shift+Tab: 取消缩进（删除行首最多4个空格）
+      const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+      const line = editor.value.substring(lineStart, start);
+      const indentLen = Math.min(4, line.match(/^ */)[0].length);
+      if (indentLen > 0) {
+        editor.value = editor.value.substring(0, lineStart) + editor.value.substring(lineStart + indentLen);
+        editor.selectionStart = editor.selectionEnd = start - indentLen;
+        updateLineNumbers();
+        autoSave();
+      }
+    } else {
+      // Tab: 插入空格到下一个4的倍数（或直接插4空格）
+      const beforeCursor = editor.value.substring(0, start);
+      const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+      const col = start - lineStart;
+      const spaces = 4 - (col % 4);
+      const padding = ' '.repeat(spaces);
+      editor.value = beforeCursor + padding + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + spaces;
+      updateLineNumbers();
+      autoSave();
+    }
+  }
+});
+
+// 自动保存（1秒防抖）
+let saveTimer;
+function autoSave() {
+  editorStatus.textContent = '保存中...';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const data = {
+      code: editor.value,
+      lang: document.getElementById('editor-lang').value,
+      time: Date.now()
+    };
+    localStorage.setItem(LS_EDITOR, JSON.stringify(data));
+    editorStatus.textContent = '已自动保存 ' + new Date().toLocaleTimeString();
+  }, 1000);
+}
+
+// 页面加载时恢复
+(function initEditor() {
+  const saved = localStorage.getItem(LS_EDITOR);
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      editor.value = data.code || '';
+      document.getElementById('editor-lang').value = data.lang || 'python';
+    } catch (_) {}
+  }
+  updateLineNumbers();
+  // 切换到编辑器tab时也刷新行号
+  document.querySelector('[data-tab="editor"]').addEventListener('click', () => {
+    updateLineNumbers();
+  });
+})();
+
+function onEditorLangChange() {
+  autoSave();
+}
+
+function runCode() {
+  const lang = document.getElementById('editor-lang').value;
+  const output = document.getElementById('editorOutput');
+  const content = document.getElementById('outputContent');
+
+  if (lang !== 'javascript') {
+    output.style.display = 'block';
+    content.className = '';
+    content.textContent = '⚠️ 离线运行仅支持 JavaScript。\n\n其他语言请复制代码到本地 IDE 运行，或用上方的「代码生成」功能请 AI 帮你检查。';
+    return;
+  }
+
+  output.style.display = 'block';
+  content.className = '';
+
+  // 捕获 console.log
+  const logs = [];
+  const fakeConsole = {
+    log: (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+    error: (...args) => logs.push('[ERROR] ' + args.map(a => String(a)).join(' ')),
+    warn: (...args) => logs.push('[WARN] ' + args.map(a => String(a)).join(' '))
+  };
+
+  try {
+    const code = editor.value;
+    const fn = new Function('console', code);
+    fn(fakeConsole);
+    content.className = '';
+    content.textContent = logs.join('\n') || '(代码执行完毕，无输出)';
+  } catch (err) {
+    content.className = 'error';
+    content.textContent = `❌ 运行错误：${err.message}\n\n💡 提示：\n  - 检查代码语法\n  - 确认代码完整（函数调用等）\n  - 浏览器环境不支持 Node.js API`;
+  }
+}
+
+function closeOutput() {
+  document.getElementById('editorOutput').style.display = 'none';
+}
+
+function downloadCode() {
+  const code = editor.value;
+  const lang = document.getElementById('editor-lang').value;
+  const extMap = { python: 'py', java: 'java', javascript: 'js', cpp: 'cpp', c: 'c', sql: 'sql' };
+  const ext = extMap[lang] || 'txt';
+  const blob = new Blob([code], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `code.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearEditor() {
+  if (editor.value && !confirm('确定清空编辑器内容？此操作不可撤销。')) return;
+  editor.value = '';
+  updateLineNumbers();
+  autoSave();
+  closeOutput();
 }
